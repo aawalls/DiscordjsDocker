@@ -1,25 +1,20 @@
-# Use Node.js 16.7 or higher for compatibility with discord.js v14
-FROM node:18
+# Use a Node.js base image compatible with discord.js v14
+FROM node:23
 
-# Set working directory
-WORKDIR /usr/src/app
+# Install Git and add user for bot
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/* && \
+    adduser --uid 99 --gid 100 --home /data --disabled-password discord-bot
 
-# Install git to pull your bot code from GitHub
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
-
-# Clone the Discord bot repository - Replace this with your GitHub repository URL
-ARG REPO_URL
-ARG REPO_BRANCH=main
-RUN git clone -b ${REPO_BRANCH} ${REPO_URL} .
-
-# Install dependencies for the bot
-RUN npm install
-
-# Copy start script
-COPY start.sh .
-
-# Make the start script executable
+# Copy the start script into the container
+COPY start.sh /start.sh
 RUN chmod +x start.sh
 
-# Start the bot using the start script
-CMD ["./start.sh"]
+# Set the user to run the bot
+USER discord-bot
+
+# Set the working directory
+VOLUME /data
+WORKDIR /data
+
+# Default command to run the start script
+CMD ["/start.sh"]
